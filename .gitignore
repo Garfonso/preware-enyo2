@@ -167,3 +167,4 @@ phonegap-phonegap-2.2.0
 #build directories:
 build
 deploy
+*.ipk
