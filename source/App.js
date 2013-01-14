@@ -85,6 +85,9 @@ enyo.kind({
 			]}
 		]}
 	],
+	log: function(msg) {
+		this.$.out.setContent(msg + "<br>" + this.$.out.getContent());
+	},
 	//Handlers
 	deviceready: function(inSender, inEvent) {
 		this.log("device ready received, yeah. :)");
@@ -265,7 +268,7 @@ enyo.kind({
 		preware.FeedsModel.loadFeeds(this.parseFeeds.bind(this));
 	},
 	parseFeeds: function(feeds) {
-		preware.PackagesModel.loadFeeds(feeds, this);
+		preware.PackagesModel.loadFeeds(feeds, this.onlyLoad); //TODO: how did old preware set/unset onlyload?
 	},
 	processStatusUpdate: function(obj) {
 		var msg = "";
