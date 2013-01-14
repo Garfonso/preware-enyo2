@@ -1,7 +1,7 @@
 /*global enyo, preware, IPKGService, $H, $L, device */
 
 enyo.singleton({
-	name: "preware.Packages",
+	name: "preware.PackagesModel",
 	// for storing assistants when we get one for certain functions, TODO: those won't work anymore..
 	assistant: false,
 	onlyLoad: false, //moved here from updateAssistant.
@@ -15,7 +15,7 @@ enyo.singleton({
 	
 	// for storing all the package information
 	packages: [],
-	packagesReversed: $H(),
+	packagesReversed: {},
 	categories: [],
 	feeds: [],
 	urls: [],
@@ -70,7 +70,7 @@ enyo.singleton({
 			// clear out our current data (incase this is a re-update)
 			this.loaded = false;
 			this.packages = [];
-			this.packagesReversed = $H();
+			this.packagesReversed = {};
 			this.hasPrices = false;
 			this.feeds = [];
 			this.urls = [];
@@ -315,7 +315,7 @@ enyo.singleton({
 			this.packages.push(newPkg);
 			
 			// save to temp reverse lookup list
-			this.packagesReversed.set(newPkg.pkg, this.packages.length);
+			this.packagesReversed[newPkg.pkg] = this.packages.length;
 
 			return newPkg;
 		} else {
@@ -387,7 +387,7 @@ enyo.singleton({
 			this.loaded = true;
 
 			// clear out our current data (incase this is a re-update)
-			this.packagesReversed = $H(); // reset this again so we can rebuild it in alphabetical order
+			this.packagesReversed = {}; // reset this again so we can rebuild it in alphabetical order
 			this.categories = [];
 			this.feeds = [];
 			this.rawData = ''; // and clear this so its not sitting around full of data
@@ -407,7 +407,7 @@ enyo.singleton({
 				
 				// build reverse-lookup list
 				for (p = 0; p < this.packages.length; p += 1) {
-					this.packagesReversed.set(this.packages[p].pkg, p + 1);
+					this.packagesReversed[this.packages[p].pkg] = p + 1;
 				}
 			}
 			
@@ -531,11 +531,11 @@ enyo.singleton({
 	},
 	
 	packageInList: function(pkg) {
-		var pkgNum = this.packagesReversed.get(pkg);
+		var pkgNum = this.packagesReversed[pkg];
 		if (pkgNum !== undefined) {
 			return pkgNum-1;
 		} else {
 			return false;
 		}
-	}
+	},
 });
