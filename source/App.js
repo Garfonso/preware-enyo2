@@ -70,7 +70,8 @@ enyo.kind({
 		{name: "ContentPanels",
 		kind: enyo.FittableRows, components: [
 			{kind: "onyx.Toolbar", content: "Debug", components:[
-				{content: "Debug"}
+				{content: "Debug"},
+				{kind: "Signals", onPackagesStatusUpdate: "processStatusUpdate",  onPackagesLoadFinished: "doneLoading" }
 			]},
 			{kind: enyo.Scroller, style: "color: white;", touch: true, fit: true, components: [
 				{style: "padding: 20px;", components:[
@@ -270,15 +271,16 @@ enyo.kind({
 	parseFeeds: function(feeds) {
 		preware.PackagesModel.loadFeeds(feeds, this.onlyLoad); //TODO: how did old preware set/unset onlyload?
 	},
-	processStatusUpdate: function(obj) {
+	processStatusUpdate: function(inSender, obj) {
 		var msg = "";
 		if (obj.error) {
 			msg = "ERROR: ";
 		}
 		msg += obj.msg;
 		if (obj.progress) {
-			msg += " - Progress: " + msg.progValue;
+			msg += " - Progress: " + obj.progValue;
 		}
+		this.log("<strong>STATUS UPDATE:</strong> " + msg);
 	},
 	doneLoading: function() {
 		// stop and hide the spinner
