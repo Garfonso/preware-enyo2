@@ -55,8 +55,17 @@ enyo.singleton({
 		
 	//methods:
 	//this replaces link to updateAssistant with a signal.
-	doDisplayStatus: function(content) {
-		enyo.Signals.send("onPackagesStatusUpdate", content);
+	doDisplayStatus: function(obj) {
+		var msg = "";
+		if (obj.error) {
+			msg = "ERROR: ";
+		}
+		msg += obj.msg;
+		if (obj.progress) {
+			msg += " - Progress: " + obj.progValue;
+		}
+		console.error("STATUS UPDATE: " + msg);
+		enyo.Signals.send("onPackagesStatusUpdate", obj);
 	},
 	
 	doneUpdating: function() {
