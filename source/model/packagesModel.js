@@ -1,4 +1,4 @@
-/*global enyo, preware, IPKGService, $H, $L, device */
+/*global enyo, preware, IPKGService, $L, device */
 
 enyo.singleton({
 	name: "preware.PackagesModel",
@@ -263,7 +263,7 @@ enyo.singleton({
 		
 		//TODO: how to get the installed OS version?? :(
 		//I think device.version should replace Mojo.Environment.DeviceInfo.platformVersion, because we are using cordova now.
-		if (device && device.version && device.verion.match(/^[0-9:.-]+$/)) {
+		if (device && device.version && device.verion.match(/^[0-9:.\-]+$/)) {
 			// Filter out apps with a minimum webos version that is greater then current
 			if (this.versionNewer(device.version, newPkg.minWebOSVersion)) {
 				//alert('+ 2');
@@ -537,5 +537,5 @@ enyo.singleton({
 		} else {
 			return false;
 		}
-	},
+	}
 });
