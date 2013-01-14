@@ -1,5 +1,5 @@
 // Preware App kind and main window.
-/*global enyo, onyx, preware, $L, navigator */
+/*global enyo, onyx, preware, $L, navigator, device, PalmServiceBridge */
 
 //to reload changes on device: luna-send -n 1 palm://com.palm.applicationManager/rescan {}
 
@@ -14,9 +14,9 @@ enyo.kind({
 		onmouseup: "released"
 	},
 	components:[
-		{name: "ItemTitle", style: "position: absolute; margin-top: 6px;"},
+		{name: "ItemTitle", style: "position: absolute; margin-top: 6px;"}
 	],
-	create:  function() {
+	create:	function() {
 		this.inherited(arguments);
 		this.$.ItemTitle.setContent(this.content);
 	},
@@ -70,7 +70,7 @@ enyo.kind({
 		{name: "ContentPanels",
 		kind: enyo.FittableRows, components: [
 			{kind: "onyx.Toolbar", content: "Debug", components:[
-				{content: "Debug"},
+				{content: "Debug"}
 			]},
 			{kind: enyo.Scroller, style: "color: white;", touch: true, fit: true, components: [
 				{style: "padding: 20px;", components:[
@@ -81,9 +81,9 @@ enyo.kind({
 				{name: "Grabber", kind: "onyx.Grabber"},
 				{kind: onyx.Button, content: "getVersion", ontap: "versionTap" },
 				{kind: onyx.Button, content: "getMachineName", ontap: "machineName" },
-				{kind: onyx.Button, content: "loadFeeds", ontap: "startLoadFeeds" },
-			]},
-		]},
+				{kind: onyx.Button, content: "loadFeeds", ontap: "startLoadFeeds" }
+			]}
+		]}
 	],
 	//Handlers
 	deviceready: function(inSender, inEvent) {
@@ -101,8 +101,9 @@ enyo.kind({
 	},
 	//Action Functions
 	showDebug: function() {
-		if(enyo.Panels.isScreenNarrow())
+		if(enyo.Panels.isScreenNarrow()) {
 			this.setIndex(1);
+		}
 	},
 	//Unsorted Functions
 	versionTap: function(inSender, inEvent) {
@@ -235,28 +236,25 @@ enyo.kind({
 	
 		// subscribe to new feed
 		preware.IPKGService.downloadFeed(this.downloadFeedResponse.bind(this, num),
-			this.feeds[num].gzipped, this.feeds[num].name, this.feeds[num].url);
+												 this.feeds[num].gzipped, this.feeds[num].name, this.feeds[num].url);
 	},
 	downloadFeedResponse: function(num, payload) {
 		if ((payload.returnValue === false) || (payload.stage === "failed")) {
 			this.log(payload.errorText + '<br>' + payload.stdErr.join("<br>"));
-		}
-		else if (payload.stage === "status") {
+		} else if (payload.stage === "status") {
 			this.log($L("<strong>Downloading Feed Information</strong><br>") + this.feeds[num].name + "<br><br>" + payload.status);
-		}
-		else if (payload.stage === "completed") {
+		} else if (payload.stage === "completed") {
 			num = num + 1;
 			if (num < this.feeds.length) {
 				// start next
 				this.downloadFeedRequest(num);
-			}
-			else {
+			} else {
 				// we're done
 				this.log($L("<strong>Done Downoading!</strong>"));
-	
+				
 				// well updating looks to have finished, lets log the date:
 				preware.PrefCookie.put('lastUpdate', Math.round(new Date().getTime()/1000.0));
-	
+				
 				this.loadFeeds();
 			}
 		}
@@ -264,10 +262,53 @@ enyo.kind({
 	loadFeeds: function(){	
 		// lets call the function to update the global list of pkgs
 		this.log($L("<strong>Loading Package Information</strong><br>"));
-		preware.FeedsModel.loadFeeds(this, this.parseFeeds.bind(this));
+		preware.FeedsModel.loadFeeds(this.parseFeeds.bind(this));
 	},
 	parseFeeds: function(feeds) {
-		packages.loadFeeds(feeds, this);
+		preware.PackagesModel.loadFeeds(feeds, this);
+	},
+	processStatusUpdate: function(obj) {
+		var msg = "";
+		if (obj.error) {
+			msg = "ERROR: ";
+		}
+		msg += obj.msg;
+		if (obj.progress) {
+			msg += " - Progress: " + msg.progValue;
+		}
+	},
+	doneLoading: function() {
+		// stop and hide the spinner
+		//this.spinnerModel.spinning = false;
+		//this.controller.modelChanged(this.spinnerModel);
+	
+		// so if we're inactive we know to push a scene when we return
+		this.isLoading = false;
+	
+		// show that we're done (while the pushed scene is going)
+		this.processStatusUpdate({msg: $L("<strong>Done!</strong>")});
+		//this.hideProgress();
+	
+		// we're done loading so let the device sleep if it needs to
+		this.stayAwake.end();
+	
+		//alert(packages.packages.length);
+	
+		//TODO: this needs replacement!
+		if (false && (!this.isActive || !this.isVisible)) {	
+			// if we're not the active scene, let them know via banner:
+			if (this.onlyLoad) {
+				Mojo.Controller.getAppController().showBanner({messageText:$L("Preware: Done Loading Feeds"), icon:'miniicon.png'}, {source:'updateNotification'});
+			} else {
+				Mojo.Controller.getAppController().showBanner({messageText:$L("Preware: Done Updating Feeds"), icon:'miniicon.png'}, {source:'updateNotification'});
+			}
+		}
+	
+		// swap to the scene passed when we were initialized:
+		if (this.isActive) {
+			//this.controller.stageController.swapScene({name: this.swapScene, transition: Mojo.Transition.crossFade}, this.swapVar1, this.swapVar2, this.swapVar3);
+			//deactivate this whatever..
+		}
 	}
 });
 
@@ -280,7 +321,7 @@ enyo.kind({
 		onbackbutton: "handleBackGesture",
 		onCoreNaviDragStart: "handleCoreNaviDragStart",
 		onCoreNaviDrag: "handleCoreNaviDrag",
-		onCoreNaviDragFinish: "handleCoreNaviDragFinish",},
+		onCoreNaviDragFinish: "handleCoreNaviDragFinish"},
 		{name: "AppPanels", kind: "AppPanels", fit: true},
 		{kind: "CoreNavi", fingerTracking: true}
 	],
@@ -304,13 +345,13 @@ enyo.kind({
 		this.$.AppPanels.setIndex(0);
 	},
 	handleCoreNaviDragStart: function(inSender, inEvent) {
-		this.$.AppPanels.dragstartTransition(this.$.AppPanels.draggable == false ? this.reverseDrag(inEvent) : inEvent);
+		this.$.AppPanels.dragstartTransition(this.$.AppPanels.draggable === false ? this.reverseDrag(inEvent) : inEvent);
 	},
 	handleCoreNaviDrag: function(inSender, inEvent) {
-		this.$.AppPanels.dragTransition(this.$.AppPanels.draggable == false ? this.reverseDrag(inEvent) : inEvent);
+		this.$.AppPanels.dragTransition(this.$.AppPanels.draggable === false ? this.reverseDrag(inEvent) : inEvent);
 	},
 	handleCoreNaviDragFinish: function(inSender, inEvent) {
-		this.$.AppPanels.dragfinishTransition(this.$.AppPanels.draggable == false ? this.reverseDrag(inEvent) : inEvent);
+		this.$.AppPanels.dragfinishTransition(this.$.AppPanels.draggable === false ? this.reverseDrag(inEvent) : inEvent);
 	},
 	//Utility Functions
 	reverseDrag: function(inEvent) {

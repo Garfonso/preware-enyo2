@@ -482,4 +482,60 @@ enyo.singleton({
 	},
 	
 	
+	// Utility stuff if following.
+	versionNewer: function(one, two) {
+		if (!one) {
+			return true;
+		}
+		if (!two) {
+			return false;
+		}
+
+		// if one >= two returns false
+		// if one < two returns true
+		var e1 = one.split(':'),
+				e2 = two.split(':'),
+				v1 = e1[e1.length > 1 ? 1 : 0].split('.'),
+				v2 = e2[e2.length > 1 ? 1 : 0].split('.'),
+				diff, j, prefix1, prefix2, i1 = [], i2 = [],
+				last, suffix1, suffix2;
+
+		if(e1.length > 1 || e2.length > 1) {
+			prefix1 = e1.length > 1 ? parseInt(e1[0], 10) : 0;
+			prefix2 = e2.length > 1 ? parseInt(e2[0], 10) : 0;
+			diff = prefix2 - prefix1;
+			if (diff !== 0) {
+				return (diff > 0) ? true : false;
+			}
+		}
+
+		last = v1.length > v2.length ? v1.length : v2.length;		//	use the larger buffer
+		for(j = 0; j < last; j += 1) {
+			i1[j] = v1.length > j ? parseInt(v1[j], 10) : 0;
+			i2[j] = v2.length > j ? parseInt(v2[j], 10) : 0;
+		}
+		suffix1 = v1.length > 0 ? v1[v1.length - 1].split('-') : [];
+		suffix2 = v2.length > 0 ? v2[v2.length - 1].split('-') : [];
+		if(suffix1.length > 1 || suffix2.length > 1) {
+			last += 1;		//	we're using one more digit
+			i1[j] = (suffix1.length > 1) ? parseInt(suffix1[1], 10) : 0;
+			i2[j] = (suffix2.length > 1) ? parseInt(suffix2[1], 10) : 0;
+		}
+		for(j = 0; j < last; j += 1) {
+			diff = i2[j] - i1[j];
+			if(diff !== 0) {
+				return (diff > 0) ? true : false;
+			}
+		}
+		return false;
+	},
+	
+	packageInList: function(pkg) {
+		var pkgNum = this.packagesReversed.get(pkg);
+		if (pkgNum !== undefined) {
+			return pkgNum-1;
+		} else {
+			return false;
+		}
+	}
 });
